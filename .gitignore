@@ -131,3 +131,5 @@ dist
 client/package-lock.json
 package-lock.json
 server/package-lock.json
+# Environment variables
+.env

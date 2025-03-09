@@ -36,16 +36,20 @@ router.get('/workorders/:id', async (req, res) => {
 
 // ✅ Create a Test Work Order
 router.post('/workorders/test', async (req, res) => {
-  try {
-    const pool = await poolPromise;
-    await pool.request()
-      .query("INSERT INTO WorkOrders (Description, CreatedDate) VALUES ('Test Work Order', GETDATE())");
-    res.send('Test Work Order Created');
-  } catch (err) {
-    console.error('Error creating test work order:', err);
-    res.status(500).send('Server Error');
-  }
-});
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .query("INSERT INTO WorkOrders (Description, CreatedDate) OUTPUT INSERTED.Id VALUES ('Test Work Order', GETDATE())");
+  
+      const createdId = result.recordset[0].Id;
+  
+      res.json({ message: 'Test Work Order Created', id: createdId });
+    } catch (err) {
+      console.error('Error creating test work order:', err);
+      res.status(500).send('Server Error');
+    }
+  });
+  
 
 // ✅ Print Work Order (for scanning)
 router.get('/workorders/print/:id', async (req, res) => {

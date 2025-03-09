@@ -8,20 +8,20 @@ body {
   .menu-container {
     max-width: 600px;
     margin: 50px auto;
-    padding: 20px;
+    padding: 30px;
     background-color: #fff;
     border-radius: 8px;
     text-align: center;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   }
   
-  .menu-container h1 {
+  .menu-container h1, .menu-container h2, .menu-container h3 {
     color: #222;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
   
   .logo {
-    width: 120px;   /* Reduced size for better quality */
+    width: 100px;  /* Smaller size for higher quality */
     height: auto;
     margin-bottom: 20px;
   }
@@ -32,11 +32,11 @@ body {
   }
   
   nav ul li {
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Spacing between buttons */
   }
   
   nav ul li a {
-    padding: 12px 20px;
+    padding: 12px 0;
     text-decoration: none;
     color: white;
     background-color: #B10A2E;
@@ -44,11 +44,63 @@ body {
     font-weight: bold;
     display: block;
     width: 100%;
-    box-sizing: border-box;
     transition: background-color 0.3s ease;
+    box-sizing: border-box;
   }
   
   nav ul li a:hover {
     background-color: #8E0725;
+  }
+  
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #B10A2E;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #8E0725;
+  }
+  
+  button:disabled {
+    background-color: #cccccc;
+  }
+  
+  .back-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #B10A2E;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .back-button:hover {
+    background-color: #8E0725;
+  }
+  
+  div {
+    word-wrap: break-word;
+  }
+  
+  @media (max-width: 600px) {
+    .menu-container {
+      width: 90%;
+      padding: 15px;
+    }
+  
+    button, .back-button, nav ul li a {
+      width: 100%;
+    }
   }
   

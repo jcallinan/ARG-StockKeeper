@@ -1,96 +1,145 @@
 const express = require('express');
+const bwipjs = require('bwip-js');
 const router = express.Router();
 const { sql, poolPromise } = require('./database');
 
-// ✅ Get All Work Orders
-router.get('/workorders', async (req, res) => {
+// ✅ Create a Test Work Order with Parts
+router.post('/workorders/test', async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query('SELECT * FROM WorkOrders');
-    res.json(result.recordset);
+
+    const result = await pool.request()
+      .query("INSERT INTO WorkOrders (Description, CreatedDate) OUTPUT INSERTED.Id VALUES ('Test Work Order', GETDATE())");
+
+    const createdId = result.recordset[0].Id;
+
+    // Insert sample parts for the new work order
+    await pool.request()
+      .query(`
+        INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity)
+        VALUES 
+          (${createdId}, 'Part A', 10),
+          (${createdId}, 'Part B', 5),
+          (${createdId}, 'Part C', 7)
+      `);
+
+    res.json({ message: 'Test Work Order Created with Parts', id: createdId });
   } catch (err) {
-    console.error('Error fetching work orders:', err);
+    console.error('Error creating test work order:', err);
     res.status(500).send('Server Error');
   }
 });
 
-// ✅ Get Single Work Order by ID
+// ✅ Get Single Work Order with Parts
 router.get('/workorders/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
+
+    // Fetch the work order details
+    const workOrderResult = await pool.request()
       .input('id', sql.Int, id)
       .query('SELECT * FROM WorkOrders WHERE Id = @id');
 
-    if (result.recordset.length === 0) {
+    if (!workOrderResult.recordset.length) {
       return res.status(404).send('Work Order Not Found');
     }
 
-    res.json(result.recordset[0]);
+    // Fetch associated parts for the work order
+    const partsResult = await pool.request()
+      .input('workOrderId', sql.Int, id)
+      .query('SELECT * FROM WorkOrderDetails WHERE WorkOrderId = @workOrderId');
+
+    res.json({
+      ...workOrderResult.recordset[0],
+      parts: partsResult.recordset
+    });
   } catch (err) {
     console.error('Error fetching work order:', err);
     res.status(500).send('Server Error');
   }
 });
 
-// ✅ Create a Test Work Order
-router.post('/workorders/test', async (req, res) => {
-    try {
-      const pool = await poolPromise;
-      const result = await pool.request()
-        .query("INSERT INTO WorkOrders (Description, CreatedDate) OUTPUT INSERTED.Id VALUES ('Test Work Order', GETDATE())");
-  
-      const createdId = result.recordset[0].Id;
-  
-      res.json({ message: 'Test Work Order Created', id: createdId });
-    } catch (err) {
-      console.error('Error creating test work order:', err);
-      res.status(500).send('Server Error');
-    }
-  });
-  
-
-// ✅ Print Work Order (for scanning)
+// ✅ Print Work Order with Barcodes
 router.get('/workorders/print/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
+
+    const workOrderResult = await pool.request()
       .input('id', sql.Int, id)
       .query('SELECT * FROM WorkOrders WHERE Id = @id');
 
-    if (result.recordset.length === 0) {
+    if (!workOrderResult.recordset.length) {
       return res.status(404).send('Work Order Not Found');
     }
 
-    const workOrder = result.recordset[0];
+    const workOrder = workOrderResult.recordset[0];
+
+    const partsResult = await pool.request()
+      .input('workOrderId', sql.Int, id)
+      .query('SELECT * FROM WorkOrderDetails WHERE WorkOrderId = @workOrderId');
+
+    // Generate barcode for the work order
+    const workOrderBarcodeBuffer = await bwipjs.toBuffer({
+      bcid: 'code128',
+      text: workOrder.Id.toString(),
+      scale: 3,
+      height: 10,
+      includetext: true,
+      textxalign: 'center',
+    });
+
+    const workOrderBarcodeImage = `data:image/png;base64,${workOrderBarcodeBuffer.toString('base64')}`;
+
+    // Generate barcodes for each part
+    const partsHtml = await Promise.all(partsResult.recordset.map(async (part) => {
+      const partBarcodeBuffer = await bwipjs.toBuffer({
+        bcid: 'code128',
+        text: part.PartName,
+        scale: 2,
+        height: 8,
+        includetext: true,
+        textxalign: 'center',
+      });
+
+      const partBarcodeImage = `data:image/png;base64,${partBarcodeBuffer.toString('base64')}`;
+
+      return `
+        <tr>
+          <td>${part.PartName}</td>
+          <td>${part.Quantity}</td>
+          <td><img src="${partBarcodeImage}" alt="Barcode for ${part.PartName}" /></td>
+        </tr>`;
+    }));
+
     res.send(`
       <html>
-      <body>
-        <h1>Work Order #${workOrder.Id}</h1>
-        <p>${workOrder.Description}</p>
-        <p>Created Date: ${workOrder.CreatedDate}</p>
-      </body>
+        <body>
+          <h1>Work Order #${workOrder.Id}</h1>
+          <p>${workOrder.Description}</p>
+          <p>Created Date: ${new Date(workOrder.CreatedDate).toLocaleDateString()}</p>
+          <div>
+            <img src="${workOrderBarcodeImage}" alt="Work Order Barcode" />
+          </div>
+          <h2>Parts List</h2>
+          <table border="1">
+            <thead>
+              <tr>
+                <th>Part Name</th>
+                <th>Quantity</th>
+                <th>Barcode</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${partsHtml.join('')}
+            </tbody>
+          </table>
+        </body>
       </html>
     `);
   } catch (err) {
     console.error('Error printing work order:', err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// ✅ Get Parts for a Specific Work Order
-router.get('/parts/:workOrderId', async (req, res) => {
-  const { workOrderId } = req.params;
-  try {
-    const pool = await poolPromise;
-    const result = await pool.request()
-      .input('workOrderId', sql.Int, workOrderId)
-      .query('SELECT * FROM WorkOrderDetails WHERE WorkOrderId = @workOrderId');
-    res.json(result.recordset);
-  } catch (err) {
-    console.error('Error fetching parts:', err);
     res.status(500).send('Server Error');
   }
 });
@@ -114,10 +163,9 @@ router.post('/checkout', async (req, res) => {
         .input('workOrderId', sql.Int, workOrderId)
         .input('partName', sql.NVarChar, part.name)
         .input('quantity', sql.Int, part.quantity)
-        .input('checkedOutDate', sql.DateTime, new Date())
         .query(`
           INSERT INTO Receipts (WorkOrderId, PartName, CheckedOutQuantity, CheckedOutDate)
-          VALUES (@workOrderId, @partName, @quantity, @checkedOutDate);
+          VALUES (@workOrderId, @partName, @quantity, GETDATE());
 
           INSERT INTO Transactions (WorkOrderId, Action, ActionDate)
           VALUES (@workOrderId, CONCAT('Checked out ', @quantity, ' of ', @partName), GETDATE());

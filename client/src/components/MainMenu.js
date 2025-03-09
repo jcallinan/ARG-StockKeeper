@@ -11,7 +11,6 @@ const MainMenu = () => {
         <ul>
           <li><Link to="/scanner">Scan Work Order</Link></li>
           <li><Link to="/generate-test-workorder">Generate Test Work Order</Link></li>
-          <li><Link to="/checkout">Checkout Parts</Link></li>
           <li><Link to="/workorders">View Work Orders</Link></li>
         </ul>
       </nav>

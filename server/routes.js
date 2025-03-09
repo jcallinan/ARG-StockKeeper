@@ -1,0 +1,107 @@
+const express = require('express');
+const router = express.Router();
+const { sql, poolPromise } = require('./database');
+
+// ✅ Get All Work Orders
+router.get('/workorders', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT * FROM WorkOrders');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching work orders:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ✅ Get Single Work Order by ID
+router.get('/workorders/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT * FROM WorkOrders WHERE Id = @id');
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error('Error fetching work order:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ✅ Create Test Work Order
+router.post('/workorders/test', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .query("INSERT INTO WorkOrders (Description, CreatedDate) VALUES ('Test Work Order', GETDATE())");
+    res.send('Test Work Order Created');
+  } catch (err) {
+    console.error('Error creating test work order:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ✅ Print Work Order (returns JSON for now)
+router.get('/workorders/print/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT * FROM WorkOrders WHERE Id = @id');
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error('Error printing work order:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ✅ Get Parts for a Work Order
+router.get('/parts/:workOrderId', async (req, res) => {
+  const { workOrderId } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('workOrderId', sql.Int, workOrderId)
+      .query('SELECT * FROM WorkOrderDetails WHERE WorkOrderId = @workOrderId');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching parts:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ✅ Checkout Parts
+router.post('/checkout', async (req, res) => {
+  const { workOrderId, parts } = req.body;
+  try {
+    const pool = await poolPromise;
+    const transaction = new sql.Transaction(pool);
+
+    await transaction.begin();
+
+    for (const part of parts) {
+      await transaction.request()
+        .input('workOrderId', sql.Int, workOrderId)
+        .input('partName', sql.NVarChar, part.name)
+        .input('quantity', sql.Int, part.quantity)
+        .input('checkedOutDate', sql.DateTime, new Date())
+        .query(`
+          INSERT INTO Receipts (WorkOrderId, PartName, CheckedOutQuantity, CheckedOutDate) 
+          VALUES (@workOrderId, @partName, @quantity, @checkedOutDate);
+          
+          INSERT INTO Transactions (WorkOrderId, Action, ActionDate)
+          VALUES (@workOrderId, CONCAT('Checked out ', @quantity, ' of ', @partName), GETDATE());
+        `);
+    }
+
+    await transaction.commit();
+    res.send('Parts checked out and transactions recorded');
+  } catch (err) {
+    console.error('Error during checkout:', err);
+    res.status(500).send('Checkout Failed');
+  }
+});
+
+module.exports = router;

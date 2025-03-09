@@ -1,22 +1,31 @@
 import React from 'react';
 import axios from 'axios';
+import BASE_URL from '../config';
 
 const CheckoutForm = ({ workOrderId, selectedParts }) => {
-  const handleCheckout = () => {
-    axios.post('http://localhost:5000/api/checkout', { workOrderId, parts: selectedParts })
-      .then(() => alert('Checkout Successful'))
-      .catch(err => console.error(err));
+  const handleCheckout = async () => {
+    try {
+      await axios.post(`${BASE_URL}/api/checkout`, {
+        workOrderId,
+        parts: selectedParts,
+      });
+      alert('Parts checked out successfully!');
+    } catch (error) {
+      console.error('Error during checkout:', error);
+    }
   };
 
   return (
-    <div className="p-4 border">
-      <h2 className="text-xl font-bold">Checkout Parts</h2>
+    <div>
+      <h2>Checkout Parts</h2>
       <ul>
-        {selectedParts.map(part => (
-          <li key={part.id}>{part.name} - {part.quantity} checked out</li>
+        {selectedParts.map((part) => (
+          <li key={part.id}>
+            {part.name} - {part.quantity} units
+          </li>
         ))}
       </ul>
-      <button onClick={handleCheckout} className="bg-red-500 text-white px-4 py-2 mt-2">Submit Checkout</button>
+      <button onClick={handleCheckout}>Submit Checkout</button>
     </div>
   );
 };

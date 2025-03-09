@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import BASE_URL from '../config';
 
 const PartsList = ({ workOrderId, setSelectedParts }) => {
   const [parts, setParts] = useState([]);
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/parts/${workOrderId}`)
+    axios.get(`${BASE_URL}/api/parts/${workOrderId}`)
       .then(res => setParts(res.data))
       .catch(err => console.error(err));
   }, [workOrderId]);
@@ -17,12 +18,12 @@ const PartsList = ({ workOrderId, setSelectedParts }) => {
   };
 
   return (
-    <div className="p-4 border">
-      <h2 className="text-xl font-bold">Available Parts</h2>
+    <div>
+      <h2>Available Parts</h2>
       {parts.map((part) => (
         <div key={part.id} className="flex justify-between">
           <p>{part.name} - {part.quantity} available</p>
-          <button onClick={() => togglePartSelection(part)} className="bg-green-500 text-white px-2 py-1">Select</button>
+          <button onClick={() => togglePartSelection(part)}>Select</button>
         </div>
       ))}
     </div>

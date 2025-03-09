@@ -1,15 +1,17 @@
 const sql = require('mssql');
+require('dotenv').config();
 
 // SQL Server Configuration
 const config = {
-  user: 'your_username',
-  password: 'your_password',
-  server: 'your_server', // e.g., 'localhost' or '127.0.0.1'
-  database: 'work_orders_db',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_DATABASE,
+  port: parseInt(process.env.DB_PORT, 10),
   options: {
-    encrypt: true, // Use this if you're on Azure
-    enableArithAbort: true,
-    trustServerCertificate: true // Use true if using a self-signed certificate
+    encrypt: process.env.DB_ENCRYPT === 'true', // Convert string to boolean
+    trustServerCertificate: process.env.DB_TRUST_CERT === 'true',
+    enableArithAbort: true
   },
   pool: {
     max: 10,

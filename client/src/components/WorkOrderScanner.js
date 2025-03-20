@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const BASE_URL = process.env.REACT_APP_BACKEND_URL;
+
 const CheckoutParts = () => {
   const [workOrderId, setWorkOrderId] = useState("");
   const [employee, setEmployee] = useState("");
@@ -17,7 +19,7 @@ const CheckoutParts = () => {
 
   const fetchWorkOrderParts = async (id) => {
     try {
-      const response = await axios.get(`/workorders/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/workorders/${id}`);
       setWorkOrderParts(response.data.parts);
     } catch (error) {
       console.error("Error fetching work order parts:", error);
@@ -43,7 +45,7 @@ const CheckoutParts = () => {
       return;
     }
     try {
-      await axios.post("/checkout", { workOrderId, parts });
+      await axios.post("${BASE_URL}/api/checkout", { workOrderId, parts });
       alert("Parts checked out successfully.");
       setParts([]);
     } catch (error) {

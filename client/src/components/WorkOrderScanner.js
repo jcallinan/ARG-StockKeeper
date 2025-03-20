@@ -63,12 +63,13 @@ const CheckoutParts = () => {
         <label>Employee</label>
         <input type="text" value={employee} onChange={(e) => setEmployee(e.target.value)} />
       </div>
-    
+      <h3>Parts</h3>
       <div>
-        <label>Part No.</label>
+        
         <div style={{ display: "flex", gap: "10px" }}>
-          <input type="text" value={partNo} onChange={(e) => setPartNo(e.target.value)} />
-          <button onClick={handleAddPart}>Add</button>
+        <label style={{width:"100px"}}>Part No.</label>
+          <input type="text" value={partNo} onChange={(e) => setPartNo(e.target.value)}   style={{width:"100%"}} />
+          <button onClick={handleAddPart} style={{ width:"100px"}}>Add</button>
         </div>
       </div>
 

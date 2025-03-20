@@ -1,5 +1,8 @@
--- 1️⃣ Create Database
-CREATE DATABASE work_orders_db;
+
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'work_orders_db')
+BEGIN
+    CREATE DATABASE work_orders_db;
+END;
 GO
 
 USE work_orders_db;
@@ -21,7 +24,14 @@ BEGIN
 END;
 GO
 
--- 4️⃣ Create Tables
+-- 4️⃣ Drop Tables If Exist
+IF OBJECT_ID('dbo.Transactions', 'U') IS NOT NULL DROP TABLE dbo.Transactions;
+IF OBJECT_ID('dbo.Receipts', 'U') IS NOT NULL DROP TABLE dbo.Receipts;
+IF OBJECT_ID('dbo.WorkOrderDetails', 'U') IS NOT NULL DROP TABLE dbo.WorkOrderDetails;
+IF OBJECT_ID('dbo.WorkOrders', 'U') IS NOT NULL DROP TABLE dbo.WorkOrders;
+GO
+
+-- 5️⃣ Recreate Tables
 CREATE TABLE WorkOrders (
     Id INT PRIMARY KEY IDENTITY(1,1),
     Description NVARCHAR(255),
@@ -32,7 +42,8 @@ CREATE TABLE WorkOrderDetails (
     Id INT PRIMARY KEY IDENTITY(1,1),
     WorkOrderId INT FOREIGN KEY REFERENCES WorkOrders(Id),
     PartName NVARCHAR(255),
-    Quantity INT
+    Quantity INT,
+    ShelfBin VARCHAR(255)
 );
 
 CREATE TABLE Receipts (
@@ -49,27 +60,57 @@ CREATE TABLE Transactions (
     Action NVARCHAR(255),
     ActionDate DATETIME
 );
-
--- 5️⃣ Insert Sample Data
-INSERT INTO WorkOrders (Description, CreatedDate) VALUES ('Sample Work Order 1', GETDATE());
-INSERT INTO WorkOrders (Description, CreatedDate) VALUES ('Sample Work Order 2', GETDATE());
-
-INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity) VALUES (1, 'Part A', 10);
-INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity) VALUES (1, 'Part B', 5);
-INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity) VALUES (2, 'Part C', 7);
-
-INSERT INTO Receipts (WorkOrderId, PartName, CheckedOutQuantity, CheckedOutDate) 
-VALUES (1, 'Part A', 5, GETDATE());
-INSERT INTO Receipts (WorkOrderId, PartName, CheckedOutQuantity, CheckedOutDate) 
-VALUES (2, 'Part C', 3, GETDATE());
-
-INSERT INTO Transactions (WorkOrderId, Action, ActionDate) 
-VALUES (1, 'Created', GETDATE());
-INSERT INTO Transactions (WorkOrderId, Action, ActionDate) 
-VALUES (2, 'Created', GETDATE());
 GO
 
--- 6️⃣ Grant Permissions to User
+-- 6️⃣ Insert Sample Data
+SET IDENTITY_INSERT [dbo].[WorkOrders] ON 
+INSERT [dbo].[WorkOrders] ([Id], [Description], [CreatedDate]) VALUES 
+(1, N'Sample Work Order 1', CAST(N'2025-03-13T18:37:50.630' AS DateTime)),
+(2, N'Sample Work Order 2', CAST(N'2025-03-13T18:37:50.643' AS DateTime)),
+(3, N'Test Work Order', CAST(N'2025-03-13T19:04:54.827' AS DateTime)),
+(4, N'Test Work Order', CAST(N'2025-03-13T19:39:30.953' AS DateTime)),
+(5, N'Test Work Order', CAST(N'2025-03-13T20:14:31.427' AS DateTime)),
+(6, N'Test Work Order', CAST(N'2025-03-20T17:59:43.050' AS DateTime)),
+(7, N'Test Work Order', CAST(N'2025-03-20T18:12:57.537' AS DateTime)),
+(8, N'Test Work Order', CAST(N'2025-03-20T18:58:28.363' AS DateTime));
+SET IDENTITY_INSERT [dbo].[WorkOrders] OFF
+GO
+
+INSERT [dbo].[WorkOrderDetails] ([WorkOrderId], [PartName], [Quantity], [ShelfBin]) VALUES 
+(1, N'Part A', 10, N'Shelf 1'),
+(1, N'Part B', 5, N'Shelf 2'),
+(2, N'Part C', 7, N'Shelf 3'),
+(3, N'Part A', 10, N'Shelf 4'),
+(3, N'Part B', 5, N'Shelf 1'),
+(3, N'Part C', 7, N'Shelf 2'),
+(4, N'Part A', 10, N'Shelf 4'),
+(4, N'Part B', 5, N'Bin 2'),
+(4, N'Part C', 7, N'Bin 2'),
+(5, N'Part A', 10, N'Shelf 2'),
+(5, N'Part B', 5, N'Bin 3'),
+(5, N'Part C', 7, N'Bin 1'),
+(6, N'Part A', 10, N'Shelf 2'),
+(6, N'Part B', 5, N'Bin 2'),
+(6, N'Part C', 7, N'Shelf 2'),
+(7, N'Part A', 10, N'Bin 5'),
+(7, N'Part B', 5, N'Shelf 2'),
+(7, N'Part C', 7, N'Bin 9'),
+(8, N'Part A', 10, N'Shelf 2'),
+(8, N'Part B', 5, N'Bin 7'),
+(8, N'Part C', 7, N'Shelf 2');
+GO
+
+INSERT INTO Receipts (WorkOrderId, PartName, CheckedOutQuantity, CheckedOutDate) VALUES
+(1, 'Part A', 5, GETDATE()),
+(2, 'Part C', 3, GETDATE());
+GO
+
+INSERT INTO Transactions (WorkOrderId, Action, ActionDate) VALUES
+(1, 'Created', GETDATE()),
+(2, 'Created', GETDATE());
+GO
+
+-- 7️⃣ Grant Permissions to User
 GRANT SELECT, INSERT, UPDATE, DELETE ON WorkOrders TO workorder_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON WorkOrderDetails TO workorder_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON Receipts TO workorder_user;

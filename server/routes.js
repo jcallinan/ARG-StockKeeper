@@ -16,11 +16,11 @@ router.post('/workorders/test', async (req, res) => {
     // Insert sample parts for the new work order
     await pool.request()
       .query(`
-        INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity)
+        INSERT INTO WorkOrderDetails (WorkOrderId, PartName, Quantity, ShelfBin)
         VALUES 
-          (${createdId}, 'Part A', 10),
-          (${createdId}, 'Part B', 5),
-          (${createdId}, 'Part C', 7)
+          (${createdId}, 'Part A', 10, 'Shelf 2'),
+          (${createdId}, 'Part B', 5, 'Shelf 2'),
+          (${createdId}, 'Part C', 7, 'Shelf 2')
       `);
 
     res.json({ message: 'Test Work Order Created with Parts', id: createdId });
@@ -109,6 +109,7 @@ router.get('/workorders/print/:id', async (req, res) => {
         <tr>
           <td>${part.PartName}</td>
           <td>${part.Quantity}</td>
+          <td>${part.ShelfBin}</td>
           <td><img src="${partBarcodeImage}" alt="Barcode for ${part.PartName}" /></td>
         </tr>`;
     }));
@@ -128,6 +129,7 @@ router.get('/workorders/print/:id', async (req, res) => {
               <tr>
                 <th>Part Name</th>
                 <th>Quantity</th>
+                 <th>Shelf/Bin</th>
                 <th>Barcode</th>
               </tr>
             </thead>

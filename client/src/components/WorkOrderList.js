@@ -8,7 +8,7 @@ const WorkOrderList = () => {
 
   useEffect(() => {
     axios.get(`${BASE_URL}/api/workorders/`)
-      .then((res) => setWorkOrders(res.data))
+      .then((res) => setWorkOrders(res.data.recordset))
       .catch((err) => console.error('Error fetching work orders:', err));
   }, []);
 
@@ -19,14 +19,15 @@ const WorkOrderList = () => {
   return (
     <div>
       <h2>All Work Orders</h2>
-  {workOrders.map((workOrder) => 
-(
-    <div key={workOrder.id}>
-      <h2>Work Order #{workOrder.id}</h2>
-      <p>{workOrder.description}</p>
+      {workOrders.map((workOrder) => (
+        <div key={workOrder.Id}>
+          <h3>Work Order #{workOrder.Id}</h3>
+          <p>{workOrder.Description}</p>
+          <p>{workOrder.CreatedDate}</p>
+        </div>
+      ))}
     </div>
-  ))}
-</div>)
+  );
 };
 
 export default WorkOrderList;

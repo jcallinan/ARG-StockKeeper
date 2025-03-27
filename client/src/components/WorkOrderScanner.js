@@ -35,7 +35,7 @@ const CheckoutParts = () => {
       return;
     }
 
-    setParts([...parts, { id: part.WorkOrderId, name: part.PartName, quantity: 1 }]);
+    setParts([...parts, { id: part.WorkOrderId, name: part.PartName, ShelfBin: part.ShelfBin, quantity: 1 }]);
     setPartNo("");
   };
 
@@ -80,6 +80,7 @@ const CheckoutParts = () => {
           <tr>
             <th>Part No.</th>
             <th>Part Name</th>
+            <th>Shelf/Bin</th>
             <th>Qty</th>
           </tr>
         </thead>
@@ -88,6 +89,7 @@ const CheckoutParts = () => {
             <tr key={index}>
               <td>{index + 1}</td>
               <td>{part.name}</td>
+              <td>{part.ShelfBin}</td>
               <td>{part.quantity}</td>
             </tr>
           ))}

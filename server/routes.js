@@ -60,6 +60,30 @@ router.get('/workorders/:id', async (req, res) => {
   }
 });
 
+// ✅ Get a List of All Work Orders
+router.get('/workorders/', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Fetch the work order details
+    const workOrderResult = await pool.request()
+      .query('SELECT * FROM WorkOrders');
+
+    if (!workOrderResult.recordset.length) {
+      return res.status(404).send('No Work Orders Found');
+    }
+
+    res.json({
+      ...workOrderResult
+    });
+  } catch (err) {
+    console.error('Error fetching work order:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+
 // ✅ Print Work Order with Barcodes
 router.get('/workorders/print/:id', async (req, res) => {
   const { id } = req.params;

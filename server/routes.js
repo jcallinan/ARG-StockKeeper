@@ -204,6 +204,33 @@ router.post('/checkout', async (req, res) => {
   }
 });
 
+
+// ✅ Get a List of Inventory by Part Name
+router.get('/inventory/:partname', async (req, res) => {
+  const { partname } = req.params;
+
+  try {
+    const pool = await poolPromise;
+
+    // Fetch the work order details
+    const inventoryResult = await pool.request()
+      .input('partname', sql.VarChar, partname)
+      .query('SELECT * FROM Inventory where partName = @partname');
+
+    if (!inventoryResult.recordset.length) {
+      return res.status(404).send('No Work Orders Found');
+    }
+
+    res.json({
+      ...inventoryResult
+    });
+  } catch (err) {
+    console.error('Error fetching work order:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+
 // ✅ Default 404 Route for Undefined Endpoints
 router.use((req, res) => {
   res.status(404).send('API Endpoint Not Found');

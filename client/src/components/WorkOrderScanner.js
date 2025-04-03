@@ -9,7 +9,16 @@ const CheckoutParts = () => {
   const [stockroom, setStockroom] = useState("MAIN");
   const [partNo, setPartNo] = useState("");
   const [parts, setParts] = useState([]);
+  const [validatedParts, setValidatedParts] = useState({});
   const [workOrderParts, setWorkOrderParts] = useState([]);
+  
+  // Track last known good values
+  const [prevParts, setPrevParts] = useState([...parts]);
+
+
+  const savePartsSnapshot = () => {
+    setPrevParts([...parts]);
+  };
 
   useEffect(() => {
     if (workOrderId) {
@@ -34,15 +43,92 @@ const CheckoutParts = () => {
       alert("Part not found in work order.");
       return;
     }
+    const quantity = 1;
+    const index = parts.length;
 
-    setParts([...parts, { id: part.WorkOrderId, name: part.PartName, ShelfBin: part.ShelfBin, quantity: 1 }]);
+    const newPart = {
+      id: part.WorkOrderId,
+      PartName: part.PartName,
+      ShelfBin: part.ShelfBin,
+      quantity: quantity
+    };
+
+    setParts((prev) => {
+      const updated = [...prev, newPart];
+      // Save snapshot immediately after set
+      setTimeout(() => setPrevParts(updated), 0);
+      return updated;
+    });
+
+    const key = `${index}-${part.PartName}-${part.ShelfBin}-1`;
+    setValidatedParts((prev) => ({ ...prev, [key]: true }));
     setPartNo("");
   };
 
-  const handleChange = (index, field, value) => {
+
+  const handleFieldChange = (index, field, value) => {
     setParts((prevParts) => {
       const updated = [...prevParts];
       updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const validateShelfBinAndQuantity = async (index) => {
+    const part = parts[index];
+    const { PartName, ShelfBin, quantity } = part;
+  
+    if (!PartName || !ShelfBin || !quantity) return;
+  
+    const key = `${index}-${PartName}-${ShelfBin}-${quantity}`;
+    if (validatedParts[key]) return; // Already validated
+  
+    try {
+      const response = await fetch(`${BASE_URL}/api/inventory/${encodeURIComponent(PartName)}`);
+      if (!response.ok) {
+        alert("Error fetching inventory.");
+        revertToPrevious(index);
+        return;
+      }
+  
+      const data = await response.json();
+      const matching = data.recordset.find(
+        (item) => item.ShelfBin === ShelfBin
+      );
+  
+      if (!matching) {
+        alert(`Shelf/bin "${ShelfBin}" does not exist for part "${PartName}".`);
+        revertToPrevious(index);
+        return;
+      }
+  
+      if (Number(quantity) > matching.Quantity) {
+        alert(
+          `Not enough quantity in ${ShelfBin} for ${PartName}. Available: ${matching.Quantity}, Requested: ${quantity}`
+        );
+        revertToPrevious(index);
+        return;
+      }
+  
+      // ✅ All good – mark as validated
+      setValidatedParts((prev) => ({ ...prev, [key]: true }));
+      savePartsSnapshot(); // <-- manually save the snapshot here
+
+    } catch (err) {
+      console.error("Validation error:", err);
+      revertToPrevious(index);
+    }
+  };
+  
+
+  const revertToPrevious = (index) => {
+    setParts((prev) => {
+      console.log(prev);
+      const updated = [...prev];
+      console.log(prevParts[index]);
+      if (prevParts[index]) {
+        updated[index] = { ...prevParts[index] };
+      }
       return updated;
     });
   };
@@ -96,13 +182,16 @@ const CheckoutParts = () => {
           {parts.map((part, index) => (
             <tr key={index}>
               <td>{index + 1}</td>
-              <td>{part.name}</td>
-              <td><input type="text" value={part.ShelfBin}  onChange={(e) =>
-                  handleChange(index, "ShelfBin", e.target.value)
-                } /></td>
-              <td><input type="number" value={part.quantity}  onChange={(e) =>
-                  handleChange(index, "quantity", e.target.value)
-                } /></td>
+              <td>        <input type="text" value={part.PartName || ''} readOnly />
+              </td>
+              <td><input type="text" value={part.ShelfBin}    onChange={(e) =>
+                  handleFieldChange(index, "ShelfBin", e.target.value)
+                }
+                onBlur={() => validateShelfBinAndQuantity(index)} /></td>
+              <td><input type="number" value={part.quantity}   onChange={(e) =>
+                  handleFieldChange(index, "quantity", e.target.value)
+                }
+                onBlur={() => validateShelfBinAndQuantity(index)} /></td>
             </tr>
           ))}
         </tbody>

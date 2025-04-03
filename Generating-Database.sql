@@ -62,6 +62,17 @@ CREATE TABLE Transactions (
 );
 GO
 
+CREATE TABLE Inventory (
+	Id int PRIMARY KEY IDENTITY(1,1),
+	PartName nvarchar(255) NULL,
+	ShelfBin varchar(255) NULL,
+	Quantity int NULL,
+	UpdatedDate datetime NULL
+    );
+GO
+
+
+
 -- 6️⃣ Insert Sample Data
 SET IDENTITY_INSERT [dbo].[WorkOrders] ON 
 INSERT [dbo].[WorkOrders] ([Id], [Description], [CreatedDate]) VALUES 
@@ -109,6 +120,27 @@ INSERT INTO Transactions (WorkOrderId, Action, ActionDate) VALUES
 (1, 'Created', GETDATE()),
 (2, 'Created', GETDATE());
 GO
+
+SET IDENTITY_INSERT [dbo].[Inventory] ON 
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (1, N'Part A', N'Shelf 1, Main Stockroom', 25, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (2, N'Part A', N'Packaging Plant', 50, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (3, N'Part B', N'Shelf 1', 50, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (4, N'Part B', N'Shelf 2', 50, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (5, N'Part C', N'Shelf 3', 50, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (6, N'Part A', N'Shelf 4', 50, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+INSERT [dbo].[Inventory] ([Id], [PartName], [ShelfBin], [Quantity], [UpdatedDate]) VALUES (7, N'Part B', N'Shelf 1', 150, CAST(N'2025-04-03T18:52:38.427' AS DateTime))
+GO
+SET IDENTITY_INSERT [dbo].[Inventory] OFF
+GO
+
+
 
 -- 7️⃣ Grant Permissions to User
 GRANT SELECT, INSERT, UPDATE, DELETE ON WorkOrders TO workorder_user;

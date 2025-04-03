@@ -82,8 +82,6 @@ router.get('/workorders/', async (req, res) => {
   }
 });
 
-
-
 // ✅ Print Work Order with Barcodes
 router.get('/workorders/print/:id', async (req, res) => {
   const { id } = req.params;

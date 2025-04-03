@@ -39,6 +39,14 @@ const CheckoutParts = () => {
     setPartNo("");
   };
 
+  const handleChange = (index, field, value) => {
+    setParts((prevParts) => {
+      const updated = [...prevParts];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
   const handleSubmit = async () => {
     if (!workOrderId || parts.length === 0) {
       alert("Please enter Work Order ID and at least one part.");
@@ -89,8 +97,12 @@ const CheckoutParts = () => {
             <tr key={index}>
               <td>{index + 1}</td>
               <td>{part.name}</td>
-              <td>{part.ShelfBin}</td>
-              <td>{part.quantity}</td>
+              <td><input type="text" value={part.ShelfBin}  onChange={(e) =>
+                  handleChange(index, "ShelfBin", e.target.value)
+                } /></td>
+              <td><input type="number" value={part.quantity}  onChange={(e) =>
+                  handleChange(index, "quantity", e.target.value)
+                } /></td>
             </tr>
           ))}
         </tbody>

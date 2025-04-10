@@ -12,6 +12,7 @@ const CheckoutParts = () => {
   const [validatedParts, setValidatedParts] = useState({});
   const [workOrderParts, setWorkOrderParts] = useState([]);
   const [prevParts, setPrevParts] = useState([...parts]);
+  const [editMode, setEditMode] = useState(false); // New state for Edit Mode
 
   const savePartsSnapshot = () => {
     setPrevParts([...parts]);
@@ -138,8 +139,12 @@ const CheckoutParts = () => {
     }
   };
 
+  const toggleEditMode = () => {
+    setEditMode((prev) => !prev);
+  };
+
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, backgroundColor: editMode ? "#e6f0ff" : "#d3e4ff" }}>
       <h2 style={styles.header}>Check Out Parts</h2>
 
       {/* Form Fields */}
@@ -219,7 +224,11 @@ const CheckoutParts = () => {
                       handleFieldChange(index, "ShelfBin", e.target.value)
                     }
                     onBlur={() => validateShelfBinAndQuantity(index)}
-                    style={styles.tableInput}
+                    style={{
+                      ...styles.tableInput,
+                      backgroundColor: editMode ? "#fff" : "#e0e0e0",
+                    }}
+                    readOnly={!editMode} // Editable only in Edit Mode
                   />
                 </td>
                 <td style={styles.tableCell}>
@@ -230,7 +239,11 @@ const CheckoutParts = () => {
                       handleFieldChange(index, "quantity", e.target.value)
                     }
                     onBlur={() => validateShelfBinAndQuantity(index)}
-                    style={styles.tableInput}
+                    style={{
+                      ...styles.tableInput,
+                      backgroundColor: editMode ? "#fff" : "#e0e0e0",
+                    }}
+                    readOnly={!editMode} // Editable only in Edit Mode
                   />
                 </td>
               </tr>
@@ -244,7 +257,15 @@ const CheckoutParts = () => {
         <button onClick={handleSubmit} style={styles.submitButton}>
           Submit
         </button>
-        <button style={styles.actionButton}>Edit Mode</button>
+        <button
+          onClick={toggleEditMode}
+          style={{
+            ...styles.actionButton,
+            backgroundColor: editMode ? "#4CAF50" : "#999", // Green when on, gray when off
+          }}
+        >
+          {editMode ? "Edit Mode On" : "Edit Mode"}
+        </button>
         <button style={styles.actionButton}>OK</button>
       </div>
     </div>
@@ -259,7 +280,6 @@ const styles = {
     padding: "10px",
     border: "2px solid #000",
     borderRadius: "5px",
-    backgroundColor: "#d3e4ff", // Light blue background like in the screenshot
     fontFamily: "Arial, sans-serif",
     fontSize: "14px",
   },

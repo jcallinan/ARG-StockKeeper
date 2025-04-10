@@ -12,7 +12,6 @@ const TestWorkOrder = () => {
       const response = await axios.post(`${BASE_URL}/api/workorders/test`);
       setCreatedId(response.data.id);
 
-      // Fetch the newly created work order details
       const details = await axios.get(`${BASE_URL}/api/workorders/${response.data.id}`);
       setCreatedWorkOrder(details.data);
 
@@ -27,25 +26,82 @@ const TestWorkOrder = () => {
   };
 
   return (
-    <div className="menu-container">
-      <h2>Generate Test Work Order</h2>
+    <div style={styles.container}>
+      <h2 style={styles.header}>Generate Test Work Order</h2>
 
-      <button onClick={generateWorkOrder}>Create Test Work Order</button>
+      <button onClick={generateWorkOrder} style={styles.button}>
+        Create Test Work Order
+      </button>
 
       {createdWorkOrder && (
-        <div>
-          <h3>Created Work Order:</h3>
-          <p>ID: {createdWorkOrder.Id}</p>
-          <p>Description: {createdWorkOrder.Description}</p>
-          <p>Created Date: {createdWorkOrder.CreatedDate}</p>
-          <button onClick={printWorkOrder}>Print Work Order</button>
+        <div style={styles.details}>
+          <h3 style={styles.subHeader}>Created Work Order:</h3>
+          <p style={styles.text}>ID: {createdWorkOrder.Id}</p>
+          <p style={styles.text}>Description: {createdWorkOrder.Description}</p>
+          <p style={styles.text}>Created Date: {createdWorkOrder.CreatedDate}</p>
+          <button onClick={printWorkOrder} style={styles.button}>
+            Print Work Order
+          </button>
         </div>
       )}
 
-      <br />
-      <Link to="/" className="back-button">Back to Home</Link>
+      <Link to="/" style={styles.backButton}>
+        Back to Home
+      </Link>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    maxWidth: "400px",
+    margin: "20px auto",
+    padding: "10px",
+    border: "2px solid #000",
+    borderRadius: "5px",
+    backgroundColor: "#d3e4ff",
+    fontFamily: "Arial, sans-serif",
+    fontSize: "14px",
+  },
+  header: {
+    textAlign: "center",
+    fontSize: "16px",
+    marginBottom: "10px",
+    color: "#ff3333", // Red accent for the header
+  },
+  button: {
+    padding: "5px 15px",
+    backgroundColor: "#666",
+    color: "#fff",
+    border: "1px solid #ff3333", // Red border for buttons
+    cursor: "pointer",
+    width: "100%",
+    margin: "5px 0",
+    fontSize: "14px",
+  },
+  details: {
+    marginTop: "10px",
+    padding: "10px",
+    border: "1px solid #000",
+    backgroundColor: "#fff",
+  },
+  subHeader: {
+    fontSize: "14px",
+    marginBottom: "5px",
+    color: "#000",
+  },
+  text: {
+    fontSize: "12px",
+    margin: "2px 0",
+  },
+  backButton: {
+    display: "block",
+    textAlign: "center",
+    marginTop: "10px",
+    color: "#ff3333", // Red color for the link
+    textDecoration: "none",
+    fontSize: "14px",
+  },
 };
 
 export default TestWorkOrder;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -12,7 +13,9 @@ const CheckoutParts = () => {
   const [validatedParts, setValidatedParts] = useState({});
   const [workOrderParts, setWorkOrderParts] = useState([]);
   const [prevParts, setPrevParts] = useState([...parts]);
-  const [editMode, setEditMode] = useState(false); // New state for Edit Mode
+  const [editMode, setEditMode] = useState(false);
+
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   const savePartsSnapshot = () => {
     setPrevParts([...parts]);
@@ -143,6 +146,10 @@ const CheckoutParts = () => {
     setEditMode((prev) => !prev);
   };
 
+  const handleCancel = () => {
+    navigate(-1); // Navigate back to the previous screen
+  };
+
   return (
     <div style={{ ...styles.container, backgroundColor: editMode ? "#e6f0ff" : "#d3e4ff" }}>
       <h2 style={styles.header}>Check Out Parts</h2>
@@ -228,7 +235,7 @@ const CheckoutParts = () => {
                       ...styles.tableInput,
                       backgroundColor: editMode ? "#fff" : "#e0e0e0",
                     }}
-                    readOnly={!editMode} // Editable only in Edit Mode
+                    readOnly={!editMode}
                   />
                 </td>
                 <td style={styles.tableCell}>
@@ -243,7 +250,7 @@ const CheckoutParts = () => {
                       ...styles.tableInput,
                       backgroundColor: editMode ? "#fff" : "#e0e0e0",
                     }}
-                    readOnly={!editMode} // Editable only in Edit Mode
+                    readOnly={!editMode}
                   />
                 </td>
               </tr>
@@ -261,12 +268,14 @@ const CheckoutParts = () => {
           onClick={toggleEditMode}
           style={{
             ...styles.actionButton,
-            backgroundColor: editMode ? "#4CAF50" : "#999", // Green when on, gray when off
+            backgroundColor: editMode ? "#4CAF50" : "#999",
           }}
         >
           {editMode ? "Edit Mode On" : "Edit Mode"}
         </button>
-        <button style={styles.actionButton}>OK</button>
+        <button onClick={handleCancel} style={styles.actionButton}>
+          Cancel
+        </button>
       </div>
     </div>
   );
